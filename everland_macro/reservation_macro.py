@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import *
 class MyDialog(QDialog):
     globX = 0
     globY = 0
+    
     def __init__(self):
         QDialog.__init__(self)
         self.setGeometry(0, 0, 300, 500)
