@@ -5,8 +5,8 @@ class CoordinatesUI(QWidget) :
         QWidget.__init__(self)
         self.xlbl = QLabel("x 좌표")
         self.ylbl = QLabel("y 좌표")
-        self.xord = QLineEdit()
-        self.yord = QLineEdit()
+        self.xord = QLineEdit("0")
+        self.yord = QLineEdit("0")
         self.getCoordBtn = QPushButton("현재 좌표 가져오기")
 
         layout = QHBoxLayout()

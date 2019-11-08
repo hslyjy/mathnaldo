@@ -4,7 +4,7 @@ class SleepTimeUI(QWidget) :
     def __init__(self):
         QWidget.__init__(self)
         self.slbl = QLabel("                                           Sleep Time")
-        self.sleepTime = QLineEdit()
+        self.sleepTime = QLineEdit("0")
 
         layout = QHBoxLayout()
         layout.addWidget(self.slbl)

@@ -1,24 +1,38 @@
 import sys
 import pyautogui as m
-import coordinates, executeui, popup, loadpopup, secretpopup, timerui, sleeptimeui
+import coordinates, executeui, popup, loadpopup, secretpopup, timerui, timeoutui, sleeptimeui, imageprocess
 import time
 import json
 import threading
 import os
-import psutil
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 class MyDialog(QDialog):
     globX = 0
     globY = 0
+    isImgUse = False
     
     def __init__(self):
         QDialog.__init__(self)
-        self.setGeometry(0, 0, 300, 500)
+        self.setFixedSize(340, 820)
         self.center()
         self.setWindowTitle("예약 매크로")
         self.setMouseTracking(False)
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         #레이블, Edit, 버튼 컨트롤
+
+        #이미지 영역
+        self.imgCheckbox = QCheckBox("이미지 파일로 실행하기")
+        self.coordImglbl1 = QLabel("이미지 검색 영역 처음 좌표")
+        self.coordImg1 = coordinates.CoordinatesUI()
+        self.coordImglbl2 = QLabel("이미지 검색 영역 마지막 좌표")
+        self.coordImg2 = coordinates.CoordinatesUI()
+        self.timeoutui = timeoutui.TimeOutUI()
+        self.coordImg1.setEnabled(False)
+        self.coordImg2.setEnabled(False)
+
+        #좌표 영역
         self.coordlb1 = QLabel("예약 버튼 좌표")
         self.coordlb2 = QLabel("선택 드롭다운 좌표")
         self.coordlb3 = QLabel("매수 좌표")
@@ -38,19 +52,33 @@ class MyDialog(QDialog):
         self.exp24 = QLabel("실행 시간은 24시 표기법 입니다.")
         self.currentOrd = QLabel("마우스를 클릭한채로 움직이면 좌표가 보입니다.")
         
+        # 이벤트 실행 영역
         self.executeui.btnOk.clicked.connect(self.clickPlayBtn)
         self.executeui.btnSave.clicked.connect(self.clickSaveBtn)
         self.executeui.btnLoad.clicked.connect(self.clickLoadBtn)
         
+        self.coordImg1.getCoordBtn.clicked.connect(lambda: self.coordImg1.setCoord({"x":self.globX, "y":self.globY}))
+        self.coordImg2.getCoordBtn.clicked.connect(lambda: self.coordImg2.setCoord({"x":self.globX, "y":self.globY}))
         self.coord1.getCoordBtn.clicked.connect(lambda: self.coord1.setCoord({"x":self.globX, "y":self.globY}))
         self.coord2.getCoordBtn.clicked.connect(lambda: self.coord2.setCoord({"x":self.globX, "y":self.globY}))
         self.coord3.getCoordBtn.clicked.connect(lambda: self.coord3.setCoord({"x":self.globX, "y":self.globY}))
         self.coord4.getCoordBtn.clicked.connect(lambda: self.coord4.setCoord({"x":self.globX, "y":self.globY}))
         self.coord5.getCoordBtn.clicked.connect(lambda: self.coord5.setCoord({"x":self.globX, "y":self.globY}))
 
+        # 타이머 영역
         self.timerui.executeBtn.clicked.connect(self.executeTimer)
 
+        #이미지 체크박스 클릭 이벤트
+        self.imgCheckbox.stateChanged.connect(self.clickImgCheckBox)
+
         layout = QVBoxLayout()
+        layout.addWidget(self.imgCheckbox)
+        layout.addWidget(self.coordImglbl1)
+        layout.addWidget(self.coordImg1)
+        layout.addWidget(self.coordImglbl2)
+        layout.addWidget(self.coordImg2)
+        layout.addWidget(self.timeoutui)
+        layout.addWidget(QLabel("----------------------------------------------------"))
         layout.addWidget(self.coordlb1)
         layout.addWidget(self.coord1)
         layout.addWidget(self.sleepTime1)
@@ -89,15 +117,31 @@ class MyDialog(QDialog):
         self.currentOrd.setText(text)
 
     def clickPlayBtn(self):
-        m.click(x=self.coord1.getXord(), y=self.coord1.getYord(), clicks=1)
-        time.sleep(self.sleepTime1.getSleepTime())
-        m.click(x=self.coord2.getXord(), y=self.coord2.getYord(), clicks=1)
-        time.sleep(self.sleepTime2.getSleepTime())
-        m.click(x=self.coord3.getXord(), y=self.coord3.getYord(), clicks=1)
-        time.sleep(self.sleepTime3.getSleepTime())
-        m.click(x=self.coord4.getXord(), y=self.coord4.getYord(), clicks=1)
-        time.sleep(self.sleepTime4.getSleepTime())
-        m.click(x=self.coord5.getXord(), y=self.coord5.getYord(), clicks=1)
+        if self.isImgUse == False :
+            m.click(x=self.coord1.getXord(), y=self.coord1.getYord(), clicks=1)
+            time.sleep(self.sleepTime1.getSleepTime())
+            m.click(x=self.coord2.getXord(), y=self.coord2.getYord(), clicks=1)
+            time.sleep(self.sleepTime2.getSleepTime())
+            m.click(x=self.coord3.getXord(), y=self.coord3.getYord(), clicks=1)
+            time.sleep(self.sleepTime3.getSleepTime())
+            m.click(x=self.coord4.getXord(), y=self.coord4.getYord(), clicks=1)
+            time.sleep(self.sleepTime4.getSleepTime())
+            m.click(x=self.coord5.getXord(), y=self.coord5.getYord(), clicks=1)
+        else :
+            imageProcessorClass = imageprocess.ImageProcessorClass()
+            imageProcessorClass.setTimeout(self.timeoutui.getTimeOut())
+            imageProcessorClass.setImages(imageprocess.searchImages())
+
+            self.checkEmptyStringAndSetZero(self.coordImg1.xord)
+            self.checkEmptyStringAndSetZero(self.coordImg1.yord)
+            self.checkEmptyStringAndSetZero(self.coordImg2.xord)
+            self.checkEmptyStringAndSetZero(self.coordImg2.yord)
+
+            imageProcessorClass.setRoiPosition(
+                (int(self.coordImg1.xord.text()), int(self.coordImg1.yord.text())),
+                (int(self.coordImg2.xord.text()), int(self.coordImg2.yord.text())))
+            
+            imageProcessorClass.playImageMacro()
 
     def clickSaveBtn(self):
         self.w = popup.PopupUI()
@@ -124,6 +168,30 @@ class MyDialog(QDialog):
         self.w = loadpopup.LoadPopupUI()
         self.w.loadBtn.clicked.connect(lambda: self.w.loadFile(self.loadFunc))
         self.w.show()
+
+    def clickImgCheckBox(self):
+        if self.imgCheckbox.isChecked():
+            self.isImgUse = True
+            self.disableAllCoord()
+        else :
+            self.isImgUse = False
+            self.disableAllCoord()
+
+    def disableAllCoord(self):
+        self.coordImg1.setEnabled(self.isImgUse == True)
+        self.coordImg2.setEnabled(self.isImgUse == True)
+        self.timeoutui.timeout.setEnabled(self.isImgUse == True)
+        self.coord1.setEnabled(self.isImgUse == False) 
+        self.coord2.setEnabled(self.isImgUse == False) 
+        self.coord3.setEnabled(self.isImgUse == False) 
+        self.coord4.setEnabled(self.isImgUse == False) 
+        self.coord5.setEnabled(self.isImgUse == False) 
+        self.sleepTime1.setEnabled(self.isImgUse == False)
+        self.sleepTime2.setEnabled(self.isImgUse == False)
+        self.sleepTime3.setEnabled(self.isImgUse == False)
+        self.sleepTime4.setEnabled(self.isImgUse == False)
+        self.executeui.btnSave.setEnabled(self.isImgUse == False) 
+        self.executeui.btnLoad.setEnabled(self.isImgUse == False)
         
     def loadFunc(self):
         fileName = self.w.et.text()
@@ -183,9 +251,15 @@ class MyDialog(QDialog):
             
         sys.exit()
 
+    def checkEmptyStringAndSetZero(self, item):
+        if item.text().strip() == "":
+            item.setText("0")
+        
+
 app = QApplication([])
 dialog = MyDialog()
 dialog.sec.show()
 dialog.sec.checkBtn.clicked.connect(lambda: dialog.sec.checkMember(dialog))
 
 app.exec_()
+
