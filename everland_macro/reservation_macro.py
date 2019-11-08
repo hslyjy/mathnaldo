@@ -21,7 +21,7 @@ class MyDialog(QDialog):
         self.coordlb1 = QLabel("예약 버튼 좌표")
         self.coordlb2 = QLabel("선택 드롭다운 좌표")
         self.coordlb3 = QLabel("매수 좌표")
-        self.coordlb4 = QLabel("신청 버튼 좌표")
+        self.coordlb4 = QLabel("신청 버튼 좌표") 
         self.coordlb5 = QLabel("확인 버튼 좌표")
         self.coord1 = coordinates.CoordinatesUI()
         self.coord2 = coordinates.CoordinatesUI()
