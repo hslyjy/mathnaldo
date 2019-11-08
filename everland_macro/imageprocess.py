@@ -39,12 +39,12 @@ class ImageProcessorClass:
                     return  
 
                 sourceImage = getImageOfROI( self.roiFirstPos, self.roiSecondPos ) # im에 roi의 이미지를 저장
-                if sourceImage is None:
+                if sourceImage == None:
                     print("Error - can't capture image of ROI")
                     sys.exit(1)
                 
                 pos = getImageLoc(sourceImage, macroImage, 0.82, self.roiFirstPos)
-                if pos is ():
+                if pos == ():
                     print("image not found", macroImage)
                 else:
                     print(macroImage, " position : ", pos) 

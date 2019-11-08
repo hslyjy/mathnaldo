@@ -255,11 +255,12 @@ class MyDialog(QDialog):
         if item.text().strip() == "":
             item.setText("0")
         
+if __name__ == "__main__":
+    app = QApplication([])
+    dialog = MyDialog()
+    dialog.sec.show()
+    dialog.sec.checkBtn.clicked.connect(lambda: dialog.sec.checkMember(dialog))
 
-app = QApplication([])
-dialog = MyDialog()
-dialog.sec.show()
-dialog.sec.checkBtn.clicked.connect(lambda: dialog.sec.checkMember(dialog))
+    app.exec_()
 
-app.exec_()
 
